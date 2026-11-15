@@ -30,11 +30,10 @@ label{font-size:12px;color:#94a3b8;font-weight:600}
 .menu-bottom button{flex:1;background:transparent;border:0;color:#94a3b8;padding:8px 2px;border-radius:12px;cursor:pointer;font-size:10px;font-weight:700;transition:all .2s}
 .menu-bottom button span{display:block;font-size:20px;margin-bottom:2px}
 .menu-bottom button.act{background:#22c55e;color:#000;transform:translateY(-4px)}
-/* PATRON DIBUJABLE */
 #patronBox{display:none;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px;text-align:center;margin:6px 0}
-#grid{display:grid;grid-template-columns:repeat(3,68px);gap:16px;justify-content:center;margin:12px auto;touch-action:none}
-.dot{width:68px;height:68px;border-radius:50%;background:#1e293b;border:3px solid #64748b;display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;user-select:none}
-.dot.active{background:#22c55e;border-color:#22c55e;color:#000}
+#grid{display:grid;grid-template-columns:repeat(3,72px);gap:18px;justify-content:center;margin:14px auto;touch-action:none;user-select:none;-webkit-user-select:none}
+.dot{width:72px;height:72px;border-radius:50%;background:#1e293b;border:3px solid #64748b;display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;touch-action:none}
+.dot.active{background:#22c55e;border-color:#22c55e;color:#000;transform:scale(1.15)}
 #patronTexto{font-size:18px;letter-spacing:3px;margin:8px 0;color:#22c55e}
 #claveBox{display:none}
 @media print{body{background:#fff;color:#000} .btn,.no-print,.menu-bottom{display:none!important} .card{border:1px solid #000;color:#000;background:#fff} }
@@ -64,7 +63,6 @@ label{font-size:12px;color:#94a3b8;font-weight:600}
 <div class="row"><div><label>IMEI</label><input id="r_imei" placeholder="IMEI"></div><div><label>Modelo / Equipo</label><input id="r_modelo" placeholder="Ej: Samsung A32"></div></div>
 <label>Falla</label><textarea id="r_falla" rows="2" placeholder="Qué le pasa..."></textarea>
 <label>Compra / Repuesto</label><input id="r_compra" placeholder="Ej: Pantalla">
-
 <label>🔓 Tipo de desbloqueo</label>
 <select id="tipoDesbloqueo" onchange="cambioDesbloqueo()">
 <option value="Sin clave">Sin clave</option>
@@ -72,19 +70,16 @@ label{font-size:12px;color:#94a3b8;font-weight:600}
 <option value="PIN">PIN</option>
 <option value="Clave">Clave / Contraseña</option>
 </select>
-
 <div id="claveBox">
 <label id="claveLabel">Clave del cliente</label>
 <input id="claveTexto" placeholder="Escribí la clave">
 </div>
-
 <div id="patronBox">
-<b>Diseñá el patrón</b><br><span class="small">Tocá los puntitos en orden, como en el celu</span>
+<b>Diseñá el patrón</b><br><span class="small">Apretá un puntito y arrastrá el dedo SIN LEVANTAR, como en el celu</span>
 <div id="grid"></div>
 <div>Patrón guardado:</div><div id="patronTexto">—</div>
 <button type="button" class="btn btn-gray" onclick="borrarPatron()">↻ Borrar y dibujar de nuevo</button>
 </div>
-
 <div class="row3"><div><label>Precio $</label><input id="r_precio" type="number" value="0" oninput="actualizarFalta()"></div><div><label>Seña $</label><input id="r_sena" type="number" value="0" oninput="actualizarFalta()"></div><div><label>Falta $</label><div class="card" style="margin:5px 0;padding:10px;text-align:center"><b id="faltaPreview" style="font-size:20px">$0</b></div></div></div>
 <label>Estado</label><select id="r_estado"><option>EN REPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select>
 <button class="btn btn-green" onclick="addRep()">✅ GUARDAR REPARACIÓN</button>
@@ -175,13 +170,30 @@ var ajustes=JSON.parse(localStorage.getItem('bialas_ajustes')||'null')||{mensaje
 if(ajustes.porc15==null) ajustes.porc15=ajustes.porc||10;
 if(ajustes.porc30==null) ajustes.porc30=20;
 
-// ===== PATRÓN DIBUJABLE =====
+// ===== PATRÓN QUE CORRE CON EL DEDO - ARREGLADO =====
 var patron=[]; var dibujando=false;
 var gridEl=document.getElementById('grid');
-for(var gi=1;gi<=9;gi++){var d=document.createElement('div');d.className='dot';d.textContent='•';d.setAttribute('data-n',gi);
-(function(dd){dd.addEventListener('pointerdown',function(e){dibujando=true;agregarPunto(dd);e.preventDefault();});dd.addEventListener('pointerenter',function(){if(dibujando)agregarPunto(dd);});})(d);gridEl.appendChild(d);}
+for(var gi=1;gi<=9;gi++){var d=document.createElement('div');d.className='dot';d.textContent='•';d.setAttribute('data-n',gi);gridEl.appendChild(d);}
+function agregarPuntoPorElemento(el){
+  if(!el) return;
+  var dot=el.closest ? el.closest('.dot') : null;
+  if(!dot) return;
+  var n=dot.getAttribute('data-n');
+  if(patron.indexOf(n)===-1){patron.push(n);dot.classList.add('active');document.getElementById('patronTexto').textContent=patron.join(' - ');}
+}
+function puntoDesdeCoordenadas(x,y){
+  var el=document.elementFromPoint(x,y);
+  agregarPuntoPorElemento(el);
+}
+// Mouse / dedo en compu
+gridEl.addEventListener('pointerdown',function(e){dibujando=true;agregarPuntoPorElemento(e.target);e.preventDefault();});
+document.addEventListener('pointermove',function(e){if(!dibujando) return; puntoDesdeCoordenadas(e.clientX,e.clientY);});
 document.addEventListener('pointerup',function(){dibujando=false;});
-function agregarPunto(dd){var n=dd.getAttribute('data-n');if(patron.indexOf(n)===-1){patron.push(n);dd.classList.add('active');document.getElementById('patronTexto').textContent=patron.join(' - ');}}
+document.addEventListener('pointercancel',function(){dibujando=false;});
+// Táctil puro - para que corra en el celu
+gridEl.addEventListener('touchstart',function(e){dibujando=true; var t=e.touches[0]; puntoDesdeCoordenadas(t.clientX,t.clientY); e.preventDefault();},{passive:false});
+gridEl.addEventListener('touchmove',function(e){if(!dibujando) return; var t=e.touches[0]; puntoDesdeCoordenadas(t.clientX,t.clientY); e.preventDefault();},{passive:false});
+gridEl.addEventListener('touchend',function(){dibujando=false;});
 function borrarPatron(){patron=[];var dots=document.querySelectorAll('.dot');for(var i=0;i<dots.length;i++)dots[i].classList.remove('active');document.getElementById('patronTexto').textContent='—';}
 function dibujarPatronGuardado(str){
   borrarPatron(); if(!str) return;
@@ -197,7 +209,6 @@ function cambioDesbloqueo(){
   if(t==='PIN'){document.getElementById('claveBox').style.display='block';document.getElementById('claveLabel').textContent='PIN del cliente';document.getElementById('claveTexto').placeholder='Ej: 1234';document.getElementById('claveTexto').inputMode='numeric';}
   if(t==='Clave'){document.getElementById('claveBox').style.display='block';document.getElementById('claveLabel').textContent='Clave / Contraseña del cliente';document.getElementById('claveTexto').placeholder='Escribí la clave';document.getElementById('claveTexto').inputMode='text';}
 }
-
 function hoyISO(){return new Date().toISOString().slice(0,10);}
 function fmt(n){return '$'+Number(n||0).toLocaleString('es-AR');}
 function show(id){
@@ -263,7 +274,6 @@ function previewAjustes(){
   txt=txt.split('{nombre}').join(tmp.c).split('{equipo}').join(tmp.m).split('{falla}').join(tmp.fa).split('{fecha}').join(tmp.f).split('{precio}').join(tmp.p).split('{seña}').join(tmp.s).split('{falta}').join(tmp.falta).split('{plazo}').join(dias).split('{porcentaje}').join(porc).split('{porc15}').join(porc15).split('{porc30}').join(porc30).split('{negocio}').join(document.getElementById('a_nombre').value||'BIALAS');
   document.getElementById('previewMensaje').textContent=txt;
 }
-function actualizarPreviewMensaje(){ previewAjustes(); }
 function saveAjustes(){
   var np=Number(document.getElementById('a_porc').value);
   var np15=Number(document.getElementById('a_porc15').value);
