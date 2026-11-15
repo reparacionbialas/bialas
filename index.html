@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BIALAS - Sistema Completo</title>
+<title>BIALAS - Sistema Completo CORREGIDO</title>
 <style>
 *{box-sizing:border-box} body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#fff;margin:0;padding:10px;padding-bottom:95px}
 h1{text-align:center;margin:6px 0 0;font-size:28px} h1 span{color:#22c55e}
@@ -56,7 +56,7 @@ label{font-size:12px;color:#94a3b8;font-weight:600}
 <input class="search" id="buscador" placeholder="🔍 Buscar cliente, equipo, falla, teléfono..." oninput="render()">
 <div id="s-rep">
 <div class="card">
-<h3>🔧 Nueva Reparación</h3>
+<h3>🔧 Nueva Reparación <span id="editandoAviso" style="color:#facc15;font-size:14px"></span></h3>
 <label>DNI - 8 números *</label><input id="r_dni" placeholder="Ej: 40123456" maxlength="8" inputmode="numeric" oninput="buscarClienteEnRep()">
 <div id="avisoDNIRep"></div>
 <label>Cliente</label><input id="r_cliente" placeholder="Apellido Nombre">
@@ -77,8 +77,8 @@ label{font-size:12px;color:#94a3b8;font-weight:600}
 <textarea id="r_comentario" rows="2" placeholder="Ej: Se cambió pantalla, quedó de 10..."></textarea>
 <div class="row3"><div><label>Precio $</label><input id="r_precio" type="number" value="0" oninput="actualizarFalta()"></div><div><label>Seña $</label><input id="r_sena" type="number" value="0" oninput="actualizarFalta()"></div><div><label>Falta $</label><div class="card" style="margin:5px 0;padding:10px;text-align:center"><b id="faltaPreview" style="font-size:20px">$0</b></div></div></div>
 <label>Estado</label><select id="r_estado"><option>EN REPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select>
-<button class="btn btn-green" onclick="addRep()">✅ GUARDAR REPARACIÓN</button>
-<button class="btn btn-gray" onclick="limpiarRep()">🗑️ Limpiar</button>
+<button class="btn btn-green" id="btnGuardarRep" onclick="addRep()">✅ GUARDAR REPARACIÓN</button>
+<button class="btn btn-gray" onclick="limpiarRep()">🗑️ Limpiar / Cancelar Edición</button>
 </div>
 <div class="card"><h3>📋 Reparaciones guardadas</h3><div id="listaRep"></div><div id="historialBoxRep"></div></div>
 </div>
@@ -101,26 +101,33 @@ label{font-size:12px;color:#94a3b8;font-weight:600}
 </div>
 <div id="s-deud" class="hidden"><div class="card"><h3>⚠️ Deudores</h3><label>Cliente</label><input id="d_cliente" placeholder="Perez Juan"><label>Teléfono</label><input id="d_tel" placeholder="3755..."><label>¿Qué debe?</label><input id="d_debe" placeholder="Ej: Arreglo A12"><div class="row"><div><label>Monto $</label><input id="d_monto" type="number" placeholder="5000"></div><div><label>Fecha</label><input id="d_fecha" type="date"></div></div><label>Plazos / Cuotas</label><input id="d_cuotas" type="number" value="1" min="1"><div id="previewPlazo" class="small"></div><button class="btn btn-green" onclick="addDeud()">✅ AGREGAR DEUDOR</button><div id="listaDeud"></div></div></div>
 <div id="s-ganancias" class="hidden">
-<div class="card"><h3>📊 Ganancias</h3>
+<div class="card"><h3>📊 Ganancias y Gastos</h3>
 <label>Elegí el mes</label><input id="g_mes" type="month" onchange="renderGanancias()">
 <div class="top" style="margin-top:10px">
-<div class="kpi green"><small>📅 ESTA SEMANA</small><b id="g-semana">$0</b></div>
-<div class="kpi green"><small>📆 ESTE MES</small><b id="g-mes">$0</b></div>
-<div class="kpi"><small>🔧 REPARACIONES MES</small><b id="g-rep-mes">$0</b></div>
+<div class="kpi green"><small>📅 ESTA SEMANA (Caja)</small><b id="g-semana">$0</b></div>
+<div class="kpi green"><small>📆 TOTAL MES (Caja)</small><b id="g-mes">$0</b></div>
+<div class="kpi"><small>🔧 REPARACIONES MES (Info)</small><b id="g-rep-mes">$0</b></div>
 </div>
 <div class="top">
-<div class="kpi"><small>🛒 VENTAS MES</small><b id="g-ven-mes">$0</b></div>
+<div class="kpi"><small>🛒 VENTAS MES (Caja)</small><b id="g-ven-mes">$0</b></div>
+<div class="kpi red"><small>💸 GASTOS MES</small><b id="g-gastos-mes">$0</b></div>
+<div class="kpi green"><small>💰 GANANCIA NETA MES</small><b id="g-neta-mes">$0</b></div>
+</div>
+<div class="top">
 <div class="kpi yellow"><small>🔧 CANT REPARACIONES</small><b id="g-cant-rep">0</b></div>
 <div class="kpi yellow"><small>🛒 CANT VENTAS</small><b id="g-cant-ven">0</b></div>
+<div class="kpi yellow"><small>💸 CANT GASTOS</small><b id="g-cant-gastos">0</b></div>
 </div>
 <div class="card" style="background:#0f172a"><b>Detalle del mes elegido:</b><div id="g-detalle" class="small" style="margin-top:6px;white-space:pre-line"></div></div>
 <button class="btn btn-green" onclick="bajarVentas()">⬇️ BAJAR VENTAS (Excel)</button>
 <button class="btn btn-blue" onclick="bajarRepMes()">⬇️ BAJAR REPARACIONES DEL MES (Excel)</button>
-<button class="btn btn-orange" onclick="bajarTodoGanancias()">⬇️ BAJAR TODO - Ventas + Reparaciones</button>
+<button class="btn btn-red" onclick="bajarGastos()">⬇️ BAJAR GASTOS (Excel)</button>
+<button class="btn btn-orange" onclick="bajarReporteGastosGanancias()">⬇️ BAJAR REPORTE COMPLETO - Gastos y Ganancias</button>
+<button class="btn btn-gray" onclick="bajarTodoGanancias()">⬇️ BAJAR TODO - Ventas + Reparaciones</button>
 </div>
 </div>
 <div id="s-ajustes" class="hidden"><div class="card"><h3>⚙️ Ajustes - Mensaje y Plazos</h3><label>📱 Mensaje de LISTO (WhatsApp)</label><textarea id="a_mensaje" rows="11" oninput="previewAjustes()"></textarea><p class="small">Podés usar: <b>{nombre} {equipo} {falla} {fecha} {precio} {seña} {falta} {plazo} {porcentaje} {porc15} {porc30}</b></p><div class="row"><div><label>📈 % a los 15 días</label><input id="a_porc15" type="number" value="10" oninput="previewAjustes()"></div><div><label>📈 % a los 30 días</label><input id="a_porc30" type="number" value="20" oninput="previewAjustes()"></div></div><div class="row"><div><label>📈 % por plazo general</label><input id="a_porc" type="number" value="10" oninput="previewAjustes()"></div><div><label>📅 Días de plazo para retirar</label><input id="a_dias" type="number" value="45" oninput="previewAjustes()"></div></div><label>Nombre del negocio</label><input id="a_nombre" value="BIALAS" oninput="previewAjustes()"><label>Teléfono del negocio</label><input id="a_tel" placeholder="3755..."><button class="btn btn-green" onclick="saveAjustes()">✅ GUARDAR AJUSTES</button><button class="btn btn-gray" onclick="resetMensaje()">↩️ Volver al mensaje original</button><div class="card" style="background:#0f172a"><b>Vista previa (con % actual):</b><div id="previewMensaje" class="small" style="white-space:pre-line;margin-top:6px"></div></div><div class="card" style="background:#14532d;border-color:#22c55e"><b>✅ % guardado ahora: <span id="porcActual">10%</span> | 15 días: <span id="porc15Actual">10%</span> | 30 días: <span id="porc30Actual">20%</span></b><br><span class="small">Si cambiás el número y apretás GUARDAR, acá tiene que cambiar.</span></div></div></div>
-<div class="foot">BIALAS PRO • Guardado automático PC + Celu • <button class="btn btn-small btn-blue" onclick="exportBackup()">💾 Copia</button> <button class="btn btn-small btn-gray" onclick="exportExcel()">⬇️ Excel</button></div>
+<div class="foot">BIALAS PRO CORREGIDO • Guardado automático PC + Celu • <button class="btn btn-small btn-blue" onclick="exportBackup()">💾 Copia</button> <button class="btn btn-small btn-gray" onclick="exportExcel()">⬇️ Excel</button></div>
 <div class="menu-bottom">
 <button onclick="irMenu('rep',this)" class="act"><span>🔧</span>Reparac.</button>
 <button onclick="irMenu('activas',this)"><span>🟡</span>Activas</button>
@@ -139,6 +146,7 @@ var firebaseConfig={apiKey:"AIzaSyB0LbXpi0UmGmh5e7UnUwuADDpPjd_QPIO",authDomain:
 firebase.initializeApp(firebaseConfig);
 var dbRef=firebase.database().ref('bialas_unico');
 var isSyncing=false,lastTs=0,clienteParaRep='';
+var editandoIdx=-1; // ✅ CORREGIDO: no borra al editar
 var clientes=JSON.parse(localStorage.getItem('bialas_clientes')||'[]');
 var rep=JSON.parse(localStorage.getItem('bialas_rep')||'[]');
 var stock=JSON.parse(localStorage.getItem('bialas_stock')||'[]');
@@ -174,7 +182,7 @@ function previewAjustes(){var tmp={c:'Perez Juan',m:'Samsung A32',fa:'No enciend
 function saveAjustes(){var np=Number(document.getElementById('a_porc').value); var np15=Number(document.getElementById('a_porc15').value); var np30=Number(document.getElementById('a_porc30').value); var nd=Number(document.getElementById('a_dias').value); ajustes={mensaje:document.getElementById('a_mensaje').value||MENSAJE_DEFAULT,porc:isNaN(np)?10:np,porc15:isNaN(np15)?10:np15,porc30:isNaN(np30)?20:np30,dias:isNaN(nd)?45:nd,nombre:document.getElementById('a_nombre').value||'BIALAS',tel:document.getElementById('a_tel').value||''}; localStorage.setItem('bialas_ajustes',JSON.stringify(ajustes)); save(); document.getElementById('porcActual').textContent=ajustes.porc+'%'; document.getElementById('porc15Actual').textContent=ajustes.porc15+'%'; document.getElementById('porc30Actual').textContent=ajustes.porc30+'%'; previewAjustes(); render(); alert('Ajustes guardados ✅ % guardado: '+ajustes.porc+'% | 15 días: '+ajustes.porc15+'% | 30 días: '+ajustes.porc30+'%');}
 function resetMensaje(){ document.getElementById('a_mensaje').value=MENSAJE_DEFAULT; previewAjustes(); }
 function actualizarFalta(){var p=Number(document.getElementById('r_precio').value||0),s=Number(document.getElementById('r_sena').value||0); document.getElementById('faltaPreview').textContent=fmt(p-s);}
-function limpiarRep(){['r_dni','r_cliente','r_tel','r_imei','r_modelo','r_falla','r_compra','claveTexto','r_comentario'].forEach(function(id){var e=document.getElementById(id); if(e) e.value='';}); document.getElementById('tipoDesbloqueo').value='Sin clave'; document.getElementById('claveBox').style.display='none'; document.getElementById('patronBox').style.display='none'; borrarPatron(); document.getElementById('r_precio').value=0; document.getElementById('r_sena').value=0; document.getElementById('r_estado').value='EN REPARACIÓN'; document.getElementById('avisoDNIRep').innerHTML=''; actualizarFalta();}
+function limpiarRep(){editandoIdx=-1; document.getElementById('editandoAviso').textContent=''; document.getElementById('btnGuardarRep').textContent='✅ GUARDAR REPARACIÓN'; ['r_dni','r_cliente','r_tel','r_imei','r_modelo','r_falla','r_compra','claveTexto','r_comentario'].forEach(function(id){var e=document.getElementById(id); if(e) e.value='';}); document.getElementById('tipoDesbloqueo').value='Sin clave'; document.getElementById('claveBox').style.display='none'; document.getElementById('patronBox').style.display='none'; borrarPatron(); document.getElementById('r_precio').value=0; document.getElementById('r_sena').value=0; document.getElementById('r_estado').value='EN REPARACIÓN'; document.getElementById('avisoDNIRep').innerHTML=''; actualizarFalta();}
 function limpiarCliente(){['cl_apellido','cl_nombre','cl_tel','cl_dni'].forEach(function(id){document.getElementById(id).value='';}); document.getElementById('cl_fecha').value=hoyISO(); document.getElementById('avisoDNI').innerHTML=''; document.getElementById('btnGuardarCli').textContent='✅ GUARDAR CLIENTE';}
 function buscarPorDNI(){var dni=document.getElementById('cl_dni').value.trim(); var aviso=document.getElementById('avisoDNI'); if(!dni||dni.length<8){aviso.innerHTML=''; document.getElementById('btnGuardarCli').textContent='✅ GUARDAR CLIENTE'; return;} var idx=-1; for(var i=0;i<clientes.length;i++){if(String(clientes[i].dni)===dni) idx=i;} if(idx>=0){var c=clientes[idx]; document.getElementById('cl_apellido').value=c.apellido||''; document.getElementById('cl_nombre').value=c.nombre||''; document.getElementById('cl_tel').value=c.t||''; document.getElementById('cl_fecha').value=c.inscripcion||c.f||hoyISO(); var reps=rep.filter(function(r){return r.c===c.nombreCompleto;}); aviso.innerHTML='<div class="card" style="background:#14532d;border-color:#22c55e"><b>✅ YA ESTÁ CARGADO: '+c.nombreCompleto+'</b><br><span class="small">Veces: '+reps.length+'</span><br><button class="btn btn-small btn-green" onclick="irAReparacionDeCliente('+idx+')">➡️ IR A REPARACIÓN</button> <button class="btn btn-small btn-blue" onclick="verHistorialClienteIdx('+idx+')">👁️ VER HISTORIAL</button></div>'; document.getElementById('btnGuardarCli').textContent='⚠️ YA ESTÁ CARGADO';} else { aviso.innerHTML='<div class="card" style="background:#422006;border-color:#f97316"><b>🆕 DNI NUEVO</b><br><span class="small">Completá Apellido, Nombre y Teléfono</span></div>'; document.getElementById('btnGuardarCli').textContent='✅ GUARDAR CLIENTE NUEVO'; }}
 function buscarClienteEnRep(){var dni=document.getElementById('r_dni').value.trim(); var aviso=document.getElementById('avisoDNIRep'); if(!dni||dni.length<8){aviso.innerHTML=''; return;} var idx=-1; for(var i=0;i<clientes.length;i++){if(String(clientes[i].dni)===dni) idx=i;} if(idx>=0){var c=clientes[idx]; document.getElementById('r_cliente').value=c.nombreCompleto||''; document.getElementById('r_tel').value=c.t||''; var reps=rep.filter(function(r){return String(r.dni||'')===dni||r.c===c.nombreCompleto;}); aviso.innerHTML='<div class="card" style="background:#14532d;border-color:#22c55e"><b>✅ CLIENTE YA CARGADO: '+c.nombreCompleto+'</b> - Tel: '+(c.t||'-')+'<br><span class="small">Veces que vino: '+reps.length+'</span><br><button class="btn btn-small btn-blue" onclick="verHistorialClienteIdx('+idx+')">👁️ Ver Historial</button></div>';} else { aviso.innerHTML='<div class="card" style="background:#422006;border-color:#f97316"><b>🆕 ESTE DNI NO ESTÁ CARGADO</b><br><button class="btn btn-small btn-orange" onclick="irACargarClienteNuevo()">➡️ IR A CARGAR CLIENTE</button></div>'; }}
@@ -183,15 +191,24 @@ function irAReparacionDeCliente(idx){var c=clientes[idx]; if(!c) return; show('r
 function verHistorialClienteIdx(idx){var c=clientes[idx]; if(!c) return; var hist=rep.filter(function(r){return r.c===c.nombreCompleto||String(r.dni||'')===String(c.dni||'');}); var total=0,falta=0; for(var i=0;i<hist.length;i++){total+=hist[i].p||0; falta+=hist[i].falta||0;} var html='<div class="card" style="border-color:#22c55e"><b>👥 HISTORIAL: '+c.nombreCompleto+' - DNI '+c.dni+'</b><br><b>Total: '+fmt(total)+' | Falta: '+fmt(falta)+' | Veces: '+hist.length+'</b><hr>'; if(hist.length===0) html+='<span class="small">Sin reparaciones todavía.</span>'; for(var j=0;j<hist.length;j++){var r=hist[j]; html+='<div class="small">• '+r.f+' - '+r.m+' - '+r.fa+'<br>Precio '+fmt(r.p)+' - Seña '+fmt(r.s)+' - Falta '+fmt(r.falta)+' - <b>'+r.est+'</b> '+(r.desbloqueo? ' - 🔓 '+r.desbloqueo : '')+(r.comentario? '<br>💬 '+r.comentario : '')+'</div><hr>';} html+='<button class="btn btn-green" onclick="irAReparacionDeCliente('+idx+')">➡️ IR A CARGAR REPARACIÓN</button><button class="btn btn-gray" onclick="cerrarHistorial()">❌ Cerrar</button></div>'; document.getElementById('historialBox').innerHTML=html; document.getElementById('historialBoxRep').innerHTML=''; show('clientes'); setTimeout(function(){document.getElementById('historialBox').scrollIntoView({behavior:'smooth'});},100);}
 function cerrarHistorial(){document.getElementById('historialBox').innerHTML=''; document.getElementById('historialBoxRep').innerHTML=''; var h=document.getElementById('historialBoxActivas'); if(h) h.innerHTML='';}
 function addCliente(){var ap=document.getElementById('cl_apellido').value.trim(),n=document.getElementById('cl_nombre').value.trim(),dni=document.getElementById('cl_dni').value.trim(); if(!ap||!n||!dni) return alert('Falta Apellido, Nombre y DNI'); if(dni.length!==8) return alert('El DNI tiene que tener 8 números'); for(var i=0;i<clientes.length;i++){if(String(clientes[i].dni)===dni){alert('Ese DNI ya está cargado como '+clientes[i].nombreCompleto); buscarPorDNI(); return;}} clientes.unshift({apellido:ap,nombre:n,nombreCompleto:ap+' '+n,t:document.getElementById('cl_tel').value,dni:dni,f:hoyISO(),inscripcion:document.getElementById('cl_fecha').value||hoyISO()}); save(); var idxNuevo=-1; for(var j=0;j<clientes.length;j++){if(String(clientes[j].dni)===dni) idxNuevo=j;} limpiarCliente(); alert('Cliente guardado ✅'); if(idxNuevo>=0) irAReparacionDeCliente(idxNuevo);}
-function addRep(){var p=Number(document.getElementById('r_precio').value||0),s=Number(document.getElementById('r_sena').value||0); var est=document.getElementById('r_estado').value; var dni=document.getElementById('r_dni').value.trim(); if(!document.getElementById('r_cliente').value||!p||!document.getElementById('r_imei').value) return alert('Falta Cliente, Precio e IMEI'); if(dni&&dni.length!==8) return alert('El DNI tiene que tener 8 números'); var tipoDes=document.getElementById('tipoDesbloqueo').value; var claveFinal=''; if(tipoDes==='Patrón') claveFinal='Patrón: '+(patron.length?patron.join('-'):'sin dibujar'); if(tipoDes==='PIN'||tipoDes==='Clave') claveFinal=tipoDes+': '+document.getElementById('claveTexto').value; if(tipoDes==='Sin clave') claveFinal='Sin clave'; var obj={f:hoyISO(),dni:dni,c:document.getElementById('r_cliente').value,imei:document.getElementById('r_imei').value,t:document.getElementById('r_tel').value,m:document.getElementById('r_modelo').value,fa:document.getElementById('r_falla').value,comentario:document.getElementById('r_comentario').value.trim(),p:p,s:s,falta:p-s,compra:document.getElementById('r_compra').value,est:est,fechaListo:est==='LISTO'?hoyISO():null,cajaSumado:false,tipoDesbloqueo:tipoDes,desbloqueo:claveFinal,patron:tipoDes==='Patrón'?patron.join('-'):'',claveTexto:(tipoDes==='PIN'||tipoDes==='Clave')?document.getElementById('claveTexto').value:''}; if(est==='ENTREGADO'){ obj.s=p; obj.falta=0; caja.unshift({f:hoyISO(),d:'Entrega - '+obj.c+' - '+obj.m,t:'VENTA',m:p}); obj.cajaSumado=true; alert('Guardada ✅ ENTREGADO + PAGADO + $'+p+' en Caja'); } else if(est==='LISTO'){ rep.unshift(obj); save(); limpiarRep(); alert('Guardada como LISTO ✅'); var r0=rep[0]; setTimeout(function(){abrirWhatsDirecto(r0);},400); return; } else { rep.unshift(obj); alert('Reparación guardada ✅'); } save(); limpiarRep();}
-// COMENTARIO NO SE MANDA - SOLO INTERNO
+// ✅ CORREGIDO addRep: ENTREGADO ya guarda, EDITAR no borra
+function addRep(){var p=Number(document.getElementById('r_precio').value||0),s=Number(document.getElementById('r_sena').value||0); var est=document.getElementById('r_estado').value; var dni=document.getElementById('r_dni').value.trim(); if(!document.getElementById('r_cliente').value||!p||!document.getElementById('r_imei').value) return alert('Falta Cliente, Precio e IMEI'); if(dni&&dni.length!==8) return alert('El DNI tiene que tener 8 números'); var tipoDes=document.getElementById('tipoDesbloqueo').value; var claveFinal=''; if(tipoDes==='Patrón') claveFinal='Patrón: '+(patron.length?patron.join('-'):'sin dibujar'); if(tipoDes==='PIN'||tipoDes==='Clave') claveFinal=tipoDes+': '+document.getElementById('claveTexto').value; if(tipoDes==='Sin clave') claveFinal='Sin clave'; var obj={f:hoyISO(),dni:dni,c:document.getElementById('r_cliente').value,imei:document.getElementById('r_imei').value,t:document.getElementById('r_tel').value,m:document.getElementById('r_modelo').value,fa:document.getElementById('r_falla').value,comentario:document.getElementById('r_comentario').value.trim(),p:p,s:s,falta:p-s,compra:document.getElementById('r_compra').value,est:est,fechaListo:est==='LISTO'?hoyISO():null,cajaSumado:false,tipoDesbloqueo:tipoDes,desbloqueo:claveFinal,patron:tipoDes==='Patrón'?patron.join('-'):'',claveTexto:(tipoDes==='PIN'||tipoDes==='Clave')?document.getElementById('claveTexto').value:''}; 
+ // Si estaba editando, conservamos cajaSumado y fecha original
+ if(editandoIdx>=0 && rep[editandoIdx]){ obj.cajaSumado=rep[editandoIdx].cajaSumado||false; obj.f=rep[editandoIdx].f||hoyISO(); }
+ if(est==='ENTREGADO'){ obj.s=p; obj.falta=0; if(!obj.cajaSumado){ caja.unshift({f:hoyISO(),d:'Entrega - '+obj.c+' - '+obj.m,t:'VENTA',m:p}); obj.cajaSumado=true; } if(editandoIdx>=0){ rep[editandoIdx]=obj; } else { rep.unshift(obj); } save(); limpiarRep(); alert('Guardada ✅ ENTREGADO + PAGADO + '+fmt(p)+' en Caja'); return; }
+ if(est==='LISTO'){ if(editandoIdx>=0){ rep[editandoIdx]=obj; } else { rep.unshift(obj); } save(); var guardada = editandoIdx>=0 ? obj : rep[0]; limpiarRep(); alert('Guardada como LISTO ✅'); setTimeout(function(){abrirWhatsDirecto(guardada);},400); return; }
+ // EN REPARACIÓN
+ if(editandoIdx>=0){ rep[editandoIdx]=obj; } else { rep.unshift(obj); }
+ save(); limpiarRep(); alert('Reparación guardada ✅');
+}
 function armarMensajeListo(r){var txt=ajustes.mensaje||MENSAJE_DEFAULT; txt=txt.split('{nombre}').join(r.c||'').split('{equipo}').join(r.m||'').split('{falla}').join(r.fa||'').split('{fecha}').join(r.f||'').split('{precio}').join(r.p||0).split('{seña}').join(r.s||0).split('{falta}').join(r.falta||0).split('{plazo}').join(ajustes.dias!=null?ajustes.dias:45).split('{porcentaje}').join(ajustes.porc!=null?ajustes.porc:10).split('{porc15}').join(ajustes.porc15!=null?ajustes.porc15:10).split('{porc30}').join(ajustes.porc30!=null?ajustes.porc30:20); txt=txt.split('{negocio}').join(ajustes.nombre||'BIALAS'); return txt;}
 function abrirWhatsDirecto(r){var tel=(r.t||'').replace(/\D/g,''); var msg=armarMensajeListo(r); if(!tel||tel.length<10){ alert(msg); return; } var numero=tel.indexOf('54')===0?tel:'54'+tel; window.open('https://wa.me/'+numero+'?text='+encodeURIComponent(msg),'_blank');}
 function marcarListo(idx){ var com=rep[idx].comentario||''; var nuevo=prompt('💬 Comentario interno (SOLO PARA VOS, no se manda al cliente):\nEj: Se cambió pantalla, quedó de 10', com); if(nuevo!==null){rep[idx].comentario=nuevo.trim();} rep[idx].est='LISTO'; rep[idx].fechaListo=hoyISO(); save(); alert('Marcado LISTO ✅ El comentario quedó guardado solo para vos'); setTimeout(function(){abrirWhatsDirecto(rep[idx]);},300); }
 function agregarComentario(idx){var actual=rep[idx].comentario||''; var nuevo=prompt('💬 Comentario interno (SOLO PARA VOS, no se manda):', actual); if(nuevo===null) return; rep[idx].comentario=nuevo.trim(); save(); alert('Comentario guardado ✅ Solo para vos');}
 function marcarPagado(idx){ if(!confirm('¿Marcar como PAGADO?')) return; var falta=rep[idx].falta||0; if(falta>0&&!rep[idx].cajaSumado){ caja.unshift({f:hoyISO(),d:'Entrega - '+rep[idx].c+' - '+rep[idx].m,t:'VENTA',m:falta}); rep[idx].cajaSumado=true; } rep[idx].s=rep[idx].p; rep[idx].falta=0; save(); alert('PAGADO ✅'); }
 function marcarRetiro(idx){ if(!confirm('¿Marcar RETIRADO / ENTREGADO?')) return; var falta=rep[idx].falta||0; if(!rep[idx].cajaSumado){ var aSumar=falta>0?falta:rep[idx].p; caja.unshift({f:hoyISO(),d:'Entrega - '+rep[idx].c+' - '+rep[idx].m,t:'VENTA',m:aSumar}); rep[idx].cajaSumado=true; } rep[idx].est='ENTREGADO'; rep[idx].s=rep[idx].p; rep[idx].falta=0; save(); alert('RETIRADO ✅'); }
-function editarRep(idx){ var r=rep[idx]; show('rep'); document.getElementById('r_dni').value=r.dni||''; document.getElementById('r_cliente').value=r.c; document.getElementById('r_tel').value=r.t; document.getElementById('r_imei').value=r.imei; document.getElementById('r_modelo').value=r.m; document.getElementById('r_falla').value=r.fa; document.getElementById('r_comentario').value=r.comentario||''; document.getElementById('r_precio').value=r.p; document.getElementById('r_sena').value=r.s; document.getElementById('r_compra').value=r.compra||''; document.getElementById('r_estado').value=r.est; document.getElementById('tipoDesbloqueo').value=r.tipoDesbloqueo||'Sin clave'; document.getElementById('claveBox').style.display='none'; document.getElementById('patronBox').style.display='none'; borrarPatron(); if(r.tipoDesbloqueo==='Patrón'){document.getElementById('patronBox').style.display='block'; dibujarPatronGuardado(r.patron||'');} if(r.tipoDesbloqueo==='PIN'||r.tipoDesbloqueo==='Clave'){document.getElementById('claveBox').style.display='block'; document.getElementById('claveTexto').value=r.claveTexto||'';} actualizarFalta(); rep.splice(idx,1); }
+// ✅ CORREGIDO editarRep: NO borra, solo carga
+function editarRep(idx){ var r=rep[idx]; editandoIdx=idx; show('rep'); document.getElementById('editandoAviso').textContent='— EDITANDO: '+r.c+' - '+r.m; document.getElementById('btnGuardarRep').textContent='💾 GUARDAR CAMBIOS'; document.getElementById('r_dni').value=r.dni||''; document.getElementById('r_cliente').value=r.c; document.getElementById('r_tel').value=r.t; document.getElementById('r_imei').value=r.imei; document.getElementById('r_modelo').value=r.m; document.getElementById('r_falla').value=r.fa; document.getElementById('r_comentario').value=r.comentario||''; document.getElementById('r_precio').value=r.p; document.getElementById('r_sena').value=r.s; document.getElementById('r_compra').value=r.compra||''; document.getElementById('r_estado').value=r.est; document.getElementById('tipoDesbloqueo').value=r.tipoDesbloqueo||'Sin clave'; document.getElementById('claveBox').style.display='none'; document.getElementById('patronBox').style.display='none'; borrarPatron(); if(r.tipoDesbloqueo==='Patrón'){document.getElementById('patronBox').style.display='block'; dibujarPatronGuardado(r.patron||'');} if(r.tipoDesbloqueo==='PIN'||r.tipoDesbloqueo==='Clave'){document.getElementById('claveBox').style.display='block'; document.getElementById('claveTexto').value=r.claveTexto||'';} actualizarFalta(); window.scrollTo({top:0,behavior:'smooth'}); }
 function addCaja(){ if(!document.getElementById('c_monto').value) return alert('Falta monto'); caja.unshift({f:hoyISO(),d:document.getElementById('c_det').value||'Movimiento',t:document.getElementById('c_tipo').value,m:Number(document.getElementById('c_monto').value)}); document.getElementById('c_det').value=''; document.getElementById('c_monto').value=''; save(); }
 function addStock(){var nombre=document.getElementById('s_prod').value.trim(); var cant=Number(document.getElementById('s_cant').value||0); var precio=Number(document.getElementById('s_precio').value||0); if(!nombre) return alert('Falta producto'); if(!cant||cant<=0) return alert('Poné cuántos entraron'); var idx=-1; for(var i=0;i<stock.length;i++){if(stock[i].p.toLowerCase()===nombre.toLowerCase()) idx=i;} if(idx>=0){ stock[idx].cant=Number(stock[idx].cant||0)+cant; if(precio) stock[idx].pre=precio; alert('Sumado ✅ Ahora tenés '+stock[idx].cant+' de '+stock[idx].p); } else { stock.unshift({p:nombre,cant:cant,pre:precio}); alert('Producto nuevo guardado ✅'); } document.getElementById('s_prod').value=''; document.getElementById('s_cant').value=1; document.getElementById('s_precio').value=''; save();}
 function stockMas(idx){ stock[idx].cant=Number(stock[idx].cant||0)+1; save(); }
@@ -200,25 +217,30 @@ function stockVender(idx){var s=stock[idx]; if(Number(s.cant||0)<=0) return aler
 function addDeud(){if(!document.getElementById('d_cliente').value) return alert('Falta cliente'); var base=Number(document.getElementById('d_monto').value||0); var cuotas=Number(document.getElementById('d_cuotas').value||1); var porc=ajustes.porc!=null?ajustes.porc:10; var total=base; if(cuotas>1) total=Math.round(base + (base*porc/100)); deud.unshift({c:document.getElementById('d_cliente').value,t:document.getElementById('d_tel').value,q:document.getElementById('d_debe').value,m:total,base:base,cuotas:cuotas,porc:porc,f:document.getElementById('d_fecha').value||hoyISO()}); save(); alert(cuotas>1 ? 'Deudor guardado ✅ Con '+porc+'% de plazo: Total '+fmt(total) : 'Deudor guardado ✅');}
 function mesElegido(){var v=document.getElementById('g_mes').value; if(!v){var hoy=new Date(); v=hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0'); document.getElementById('g_mes').value=v;} return v;}
 function esDelMes(fecha,mes){return (fecha||'').slice(0,7)===mes;}
+// ✅ CORREGIDO: Ganancias = solo Caja, no suma Reparaciones 2 veces
 function renderGanancias(){
   var mes=mesElegido();
   var hoy=new Date(); var hace7=new Date(); hace7.setDate(hoy.getDate()-6);
   var hoyISO2=hoyISO(); var hace7ISO=hace7.toISOString().slice(0,10);
-  var totalSemana=0, totalMes=0, repMes=0, venMes=0, cantRep=0, cantVen=0;
+  var totalSemana=0, repMes=0, venMes=0, gasMes=0, cantRep=0, cantVen=0, cantGas=0;
   for(var i=0;i<caja.length;i++){var c=caja[i]; var f=c.f||''; var monto=c.t==='VENTA'?Number(c.m||0):-Number(c.m||0);
     if(f>=hace7ISO && f<=hoyISO2) totalSemana+=monto;
-    if(esDelMes(f,mes)) totalMes+=monto;
     if(esDelMes(f,mes) && c.t==='VENTA'){venMes+=Number(c.m||0); cantVen++;}
+    if(esDelMes(f,mes) && c.t==='GASTO'){gasMes+=Number(c.m||0); cantGas++;}
   }
   for(var j=0;j<rep.length;j++){var r=rep[j]; if(esDelMes(r.f,mes)){repMes+=Number(r.p||0); cantRep++;}}
-  var totalReal=venMes+repMes;
+  var totalBruto=venMes; // ✅ CORREGIDO: antes era venMes+repMes (doble)
+  var neta=totalBruto-gasMes;
   document.getElementById('g-semana').textContent=fmt(totalSemana);
-  document.getElementById('g-mes').textContent=fmt(totalReal);
+  document.getElementById('g-mes').textContent=fmt(totalBruto);
   document.getElementById('g-rep-mes').textContent=fmt(repMes);
   document.getElementById('g-ven-mes').textContent=fmt(venMes);
+  document.getElementById('g-gastos-mes').textContent=fmt(gasMes);
+  document.getElementById('g-neta-mes').textContent=fmt(neta);
   document.getElementById('g-cant-rep').textContent=cantRep;
   document.getElementById('g-cant-ven').textContent=cantVen;
-  document.getElementById('g-detalle').textContent='Mes: '+mes+'\nVentas en Caja: '+fmt(venMes)+' ('+cantVen+' ventas)\nReparaciones: '+fmt(repMes)+' ('+cantRep+' reparaciones)\nTOTAL MES (Ventas + Reparaciones): '+fmt(totalReal)+'\n\nSemana (últimos 7 días, Caja): '+fmt(totalSemana);
+  document.getElementById('g-cant-gastos').textContent=cantGas;
+  document.getElementById('g-detalle').textContent='Mes: '+mes+'\nVentas + Entregas en Caja: '+fmt(venMes)+' ('+cantVen+' movimientos)\nReparaciones creadas (solo info, no se suma 2 veces): '+fmt(repMes)+' ('+cantRep+' reparaciones)\nGastos: -'+fmt(gasMes)+' ('+cantGas+' gastos)\nTOTAL BRUTO (Caja): '+fmt(totalBruto)+'\nGANANCIA NETA (Bruto - Gastos): '+fmt(neta)+'\n\nSemana (últimos 7 días, Caja): '+fmt(totalSemana);
 }
 function descargarCSV(nombre,csv){var b=new Blob(['\ufeff'+csv],{type:'text/csv'}); var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=nombre; a.click();}
 function escCSV(t){return '"'+String(t==null?'':t).replace(/"/g,'""')+'"';}
@@ -228,21 +250,44 @@ function bajarVentas(){
   csv+='\nTOTAL VENTAS,'+total+'\n';
   descargarCSV('BIALAS_Ventas_'+mes+'.csv',csv); alert('Ventas bajadas ✅ Total: '+fmt(total));
 }
+function bajarGastos(){
+  var mes=mesElegido(); var csv='GASTOS BIALAS - MES '+mes+'\nFecha,Detalle,Monto\n'; var total=0;
+  for(var i=0;i<caja.length;i++){var c=caja[i]; if(esDelMes(c.f,mes)&&c.t==='GASTO'){csv+=escCSV(c.f)+','+escCSV(c.d)+','+c.m+'\n'; total+=Number(c.m||0);}}
+  csv+='\nTOTAL GASTOS,'+total+'\n';
+  descargarCSV('BIALAS_Gastos_'+mes+'.csv',csv); alert('Gastos bajados ✅ Total: '+fmt(total));
+}
 function bajarRepMes(){
   var mes=mesElegido(); var csv='REPARACIONES BIALAS - MES '+mes+'\nFecha,DNI,Cliente,Telefono,Modelo,Falla,Precio,Seña,Falta,Estado,Desbloqueo,Comentario\n'; var total=0, totalFalta=0;
   for(var i=0;i<rep.length;i++){var r=rep[i]; if(esDelMes(r.f,mes)){csv+=escCSV(r.f)+','+escCSV(r.dni)+','+escCSV(r.c)+','+escCSV(r.t)+','+escCSV(r.m)+','+escCSV(r.fa)+','+r.p+','+r.s+','+r.falta+','+escCSV(r.est)+','+escCSV(r.desbloqueo||'')+','+escCSV(r.comentario||'')+'\n'; total+=Number(r.p||0); totalFalta+=Number(r.falta||0);}}
   csv+='\nTOTAL REPARACIONES,'+total+'\nTOTAL FALTA COBRAR,'+totalFalta+'\n';
   descargarCSV('BIALAS_Reparaciones_'+mes+'.csv',csv); alert('Reparaciones del mes bajadas ✅ Total: '+fmt(total));
 }
+function bajarReporteGastosGanancias(){
+  var mes=mesElegido();
+  var totV=0, totG=0, totR=0;
+  var csv='REPORTE BIALAS - GASTOS Y GANANCIAS - MES '+mes+'\n\nRESUMEN\n';
+  for(var i=0;i<caja.length;i++){var c=caja[i]; if(esDelMes(c.f,mes)&&c.t==='VENTA') totV+=Number(c.m||0); if(esDelMes(c.f,mes)&&c.t==='GASTO') totG+=Number(c.m||0);}
+  for(var j=0;j<rep.length;j++){if(esDelMes(rep[j].f,mes)) totR+=Number(rep[j].p||0);}
+  var bruto=totV; var neta=bruto-totG; // ✅ CORREGIDO: no suma rep 2 veces
+  csv+='Ventas en Caja,'+totV+'\nReparaciones creadas (info),'+totR+'\nTotal Bruto (Caja),'+bruto+'\nGastos,-'+totG+'\nGANANCIA NETA,'+neta+'\n\n';
+  csv+='VENTAS\nFecha,Detalle,Monto\n';
+  for(var i2=0;i2<caja.length;i2++){var c2=caja[i2]; if(esDelMes(c2.f,mes)&&c2.t==='VENTA') csv+=escCSV(c2.f)+','+escCSV(c2.d)+','+c2.m+'\n';}
+  csv+='TOTAL VENTAS,'+totV+'\n\nGASTOS\nFecha,Detalle,Monto\n';
+  for(var i3=0;i3<caja.length;i3++){var c3=caja[i3]; if(esDelMes(c3.f,mes)&&c3.t==='GASTO') csv+=escCSV(c3.f)+','+escCSV(c3.d)+','+c3.m+'\n';}
+  csv+='TOTAL GASTOS,'+totG+'\n\nREPARACIONES\nFecha,Cliente,Modelo,Precio,Falta,Estado\n';
+  for(var j2=0;j2<rep.length;j2++){var r2=rep[j2]; if(esDelMes(r2.f,mes)) csv+=escCSV(r2.f)+','+escCSV(r2.c)+','+escCSV(r2.m)+','+r2.p+','+r2.falta+','+escCSV(r2.est)+'\n';}
+  csv+='TOTAL REPARACIONES (info),'+totR+'\n\nGANANCIA NETA,'+neta+'\n';
+  descargarCSV('BIALAS_Reporte_Gastos_Ganancias_'+mes+'.csv',csv); alert('Reporte bajado ✅ Ganancia neta: '+fmt(neta));
+}
 function bajarTodoGanancias(){
   var mes=mesElegido(); var csv='GANANCIAS BIALAS - MES '+mes+'\n\nVENTAS\nFecha,Detalle,Monto\n'; var totV=0;
   for(var i=0;i<caja.length;i++){var c=caja[i]; if(esDelMes(c.f,mes)&&c.t==='VENTA'){csv+=escCSV(c.f)+','+escCSV(c.d)+','+c.m+'\n'; totV+=Number(c.m||0);}}
   csv+='TOTAL VENTAS,'+totV+'\n\nREPARACIONES\nFecha,Cliente,Modelo,Precio,Falta,Estado,Comentario\n'; var totR=0;
   for(var j=0;j<rep.length;j++){var r=rep[j]; if(esDelMes(r.f,mes)){csv+=escCSV(r.f)+','+escCSV(r.c)+','+escCSV(r.m)+','+r.p+','+r.falta+','+escCSV(r.est)+','+escCSV(r.comentario||'')+'\n'; totR+=Number(r.p||0);}}
-  csv+='TOTAL REPARACIONES,'+totR+'\n\nTOTAL MES (Ventas + Reparaciones),'+(totV+totR)+'\n';
-  descargarCSV('BIALAS_Ganancias_'+mes+'.csv',csv); alert('Todo bajado ✅ Total mes: '+fmt(totV+totR));
+  csv+='TOTAL REPARACIONES (info),'+totR+'\n\nTOTAL MES EN CAJA,'+totV+'\n';
+  descargarCSV('BIALAS_Ganancias_'+mes+'.csv',csv); alert('Todo bajado ✅ Total en Caja: '+fmt(totV));
 }
-function exportBackup(){ var datos={version:1,fecha:hoyISO(),clientes:clientes,rep:rep,stock:stock,caja:caja,deud:deud,ajustes:ajustes}; var b=new Blob([JSON.stringify(datos,null,2)],{type:'application/json'}); var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='BIALAS_COPIA_'+hoyISO()+'.json'; a.click(); alert('Copia guardada ✅'); }
+function exportBackup(){ var datos={version:2,fecha:hoyISO(),clientes:clientes,rep:rep,stock:stock,caja:caja,deud:deud,ajustes:ajustes}; var b=new Blob([JSON.stringify(datos,null,2)],{type:'application/json'}); var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='BIALAS_COPIA_'+hoyISO()+'.json'; a.click(); alert('Copia guardada ✅'); }
 function exportExcel(){function esc(t){return '"'+String(t==null?'':t).replace(/"/g,'""')+'"';} var csv="CLIENTES\nApellido,Nombre,Telefono,DNI,Fecha\n"; clientes.forEach(function(c){csv+=esc(c.apellido)+","+esc(c.nombre)+","+esc(c.t)+","+esc(c.dni)+","+esc(c.inscripcion||c.f)+"\n";}); csv+="\nREPARACIONES\nFecha,DNI,Cliente,IMEI,Telefono,Modelo,Falla,Precio,Seña,Falta,Estado,Desbloqueo,Comentario\n"; rep.forEach(function(r){csv+=esc(r.f)+","+esc(r.dni)+","+esc(r.c)+","+esc(r.imei)+","+esc(r.t)+","+esc(r.m)+","+esc(r.fa)+","+r.p+","+r.s+","+r.falta+","+esc(r.est)+","+esc(r.desbloqueo||'')+","+esc(r.comentario||'')+"\n";}); csv+="\nSTOCK\nProducto,Cantidad,Precio\n"; stock.forEach(function(s){csv+=esc(s.p)+","+s.cant+","+s.pre+"\n";}); var b=new Blob(['\ufeff'+csv],{type:'text/csv'}); var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='Bialas.csv'; a.click();}
 function tarjetaRep(r,idx){var clase=r.est==='ENTREGADO'?'b-ent':r.est==='LISTO'?'b-listo':'b-rep'; var txt=r.est==='ENTREGADO'?'⚫ ENTREGADO':r.est==='LISTO'?'🟢 LISTO':'🟡 EN REPARACIÓN'; var comHtml=r.comentario?'<div class="comentario">💬 <b>Comentario interno - solo vos:</b> '+r.comentario+'</div>':''; return '<div class="card"><b>👤 '+r.c+'</b> - 📱 '+r.m+'<br><span class="small">📅 '+r.f+' | DNI: '+(r.dni||'-')+' | 📞 '+r.t+' | IMEI: '+r.imei+'</span><br><span class="small">🔧 '+r.fa+' | 🛒 '+(r.compra||'Sin compra')+'</span><br><span class="small">🔓 '+(r.desbloqueo||r.tipoDesbloqueo||'Sin clave')+'</span>'+comHtml+'<br><span class="badge '+clase+'">'+txt+'</span> '+(r.falta==0?'<span class="badge b-listo">✅ PAGADO</span>':'<span class="badge b-espera">❌ DEBE '+fmt(r.falta)+'</span>')+'<br><span class="small">💰 Precio '+fmt(r.p)+' | Seña '+fmt(r.s)+' | <b>Falta '+fmt(r.falta)+'</b></span><br><button class="btn btn-small btn-wsp" onclick="marcarListo('+idx+')">✅ LISTO + WHATSAPP</button><button class="btn btn-small btn-green" onclick="marcarPagado('+idx+')">✅ PAGADO + CAJA</button><button class="btn btn-small" style="background:#111;color:#fff" onclick="marcarRetiro('+idx+')">📦 RETIRO</button><br><button class="btn btn-small btn-blue" onclick="agregarComentario('+idx+')">💬 Comentario</button><button class="btn btn-small btn-blue" onclick="editarRep('+idx+')">✏️ EDITAR</button></div>';}
 function render(){
